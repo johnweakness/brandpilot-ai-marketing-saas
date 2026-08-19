@@ -1,0 +1,3 @@
+import type {Metadata} from "next";import "./globals.css";
+export const metadata:Metadata={title:"BrandPilot — AI Marketing Assistant",description:"Turn one brand brief into on-brand social posts, emails, ads, product copy, landing pages, and more.",icons:{icon:"/favicon.svg"},openGraph:{title:"BrandPilot — AI Marketing Assistant",description:"From brand brief to campaign in minutes.",images:["/og.png"]},twitter:{card:"summary_large_image",title:"BrandPilot — AI Marketing Assistant",description:"From brand brief to campaign in minutes.",images:["/og.png"]}};
+export default function RootLayout({children}:Readonly<{children:React.ReactNode}>){return <html lang="en"><body>{children}</body></html>}
