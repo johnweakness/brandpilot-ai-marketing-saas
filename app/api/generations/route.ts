@@ -1,25 +1,4 @@
-import { getSupabaseAdmin } from "@/db";
-
-export const dynamic = "force-dynamic";
-
-export async function GET() {
-  try {
-    const { data, error } = await getSupabaseAdmin().from("generations").select("*").order("created_at", { ascending: false }).limit(100);
-    if (error) throw error;
-    return Response.json((data ?? []).map(row => ({ id: row.id, title: row.title, contentType: row.content_type, prompt: row.prompt, tone: row.tone, content: row.content, status: row.status, createdAt: row.created_at })));
-  } catch (error) {
-    return Response.json({ error: error instanceof Error ? error.message : "Unable to load content." }, { status: 503 });
-  }
-}
-
-export async function POST(request: Request) {
-  try {
-    const body = await request.json() as Record<string, string>;
-    if (!body.title || !body.contentType || !body.prompt || !body.tone || !body.content) return Response.json({ error: "Missing required fields." }, { status: 400 });
-    const { data, error } = await getSupabaseAdmin().from("generations").insert({ title: body.title, content_type: body.contentType, prompt: body.prompt, tone: body.tone, content: body.content }).select().single();
-    if (error) throw error;
-    return Response.json(data, { status: 201 });
-  } catch (error) {
-    return Response.json({ error: error instanceof Error ? error.message : "Unable to save content." }, { status: 503 });
-  }
-}
+import { requireUser } from "@/lib/auth";import { getSupabaseAdmin } from "@/db";
+export const dynamic="force-dynamic";
+export async function GET(request:Request){try{const user=await requireUser(request);if(!user)return Response.json({error:"Unauthorized"},{status:401});const{data,error}=await getSupabaseAdmin().from("generations").select("*").eq("user_id",user.id).order("created_at",{ascending:false}).limit(100);if(error)throw error;return Response.json((data??[]).map(r=>({id:r.id,title:r.title,contentType:r.content_type,prompt:r.prompt,tone:r.tone,content:r.content,status:r.status,createdAt:r.created_at})))}catch(e){return Response.json({error:e instanceof Error?e.message:"Unable to load content."},{status:500})}}
+export async function DELETE(request:Request){try{const user=await requireUser(request);if(!user)return Response.json({error:"Unauthorized"},{status:401});const id=new URL(request.url).searchParams.get("id");if(!id)return Response.json({error:"Missing id."},{status:400});const{error}=await getSupabaseAdmin().from("generations").delete().eq("id",id).eq("user_id",user.id);if(error)throw error;return new Response(null,{status:204})}catch(e){return Response.json({error:e instanceof Error?e.message:"Delete failed."},{status:500})}}

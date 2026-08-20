@@ -1,30 +1,4 @@
-import { getSupabaseAdmin } from "@/db";
-
-export const dynamic = "force-dynamic";
-
-export async function GET() {
-  try {
-    const { data, error } = await getSupabaseAdmin().from("brand_profiles").select("*").limit(1).maybeSingle();
-    if (error) throw error;
-    return Response.json(data);
-  } catch (error) {
-    return Response.json({ error: error instanceof Error ? error.message : "Unable to load brand." }, { status: 503 });
-  }
-}
-
-export async function PUT(request: Request) {
-  try {
-    const body = await request.json() as Record<string, string>;
-    if (!body.name || !body.description) return Response.json({ error: "Brand name and description are required." }, { status: 400 });
-    const supabase = getSupabaseAdmin();
-    const { data: existing, error: readError } = await supabase.from("brand_profiles").select("id").limit(1).maybeSingle();
-    if (readError) throw readError;
-    const values = { name: body.name, website: body.website, description: body.description, audience: body.audience, personality: body.personality, avoid_words: body.avoidWords, updated_at: new Date().toISOString() };
-    const query = existing ? supabase.from("brand_profiles").update(values).eq("id", existing.id) : supabase.from("brand_profiles").insert(values);
-    const { data, error } = await query.select().single();
-    if (error) throw error;
-    return Response.json(data);
-  } catch (error) {
-    return Response.json({ error: error instanceof Error ? error.message : "Unable to save brand." }, { status: 503 });
-  }
-}
+import { requireUser } from "@/lib/auth";import { getSupabaseAdmin } from "@/db";
+export const dynamic="force-dynamic";
+export async function GET(request:Request){try{const user=await requireUser(request);if(!user)return Response.json({error:"Unauthorized"},{status:401});const{data,error}=await getSupabaseAdmin().from("brand_profiles").select("*").eq("user_id",user.id).maybeSingle();if(error)throw error;return Response.json(data)}catch(e){return Response.json({error:e instanceof Error?e.message:"Unable to load brand."},{status:500})}}
+export async function PUT(request:Request){try{const user=await requireUser(request);if(!user)return Response.json({error:"Unauthorized"},{status:401});const b=await request.json() as Record<string,string>;if(!b.name||!b.description)return Response.json({error:"Brand name and description are required."},{status:400});const{data,error}=await getSupabaseAdmin().from("brand_profiles").upsert({user_id:user.id,name:b.name.trim(),website:b.website?.trim(),description:b.description.trim(),audience:b.audience?.trim(),personality:b.personality?.trim(),avoid_words:b.avoidWords?.trim(),updated_at:new Date().toISOString()},{onConflict:"user_id"}).select().single();if(error)throw error;return Response.json(data)}catch(e){return Response.json({error:e instanceof Error?e.message:"Unable to save brand."},{status:500})}}
