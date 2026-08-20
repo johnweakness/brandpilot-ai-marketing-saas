@@ -1,6 +1,6 @@
 # BrandPilot
 
-Production AI marketing SaaS built with Next.js, Supabase, OpenAI, and Stripe.
+Production AI marketing SaaS built with Next.js, Supabase, Google Gemini, and Stripe.
 
 ## Setup
 
@@ -13,6 +13,6 @@ Production AI marketing SaaS built with Next.js, Supabase, OpenAI, and Stripe.
 
 ## Vercel
 
-Add every non-commented value from `.env.example` to Vercel Environment Variables. Never expose the service-role, OpenAI, or Stripe secret keys as `NEXT_PUBLIC_*` values.
+Add the required values to Vercel Environment Variables, including `GEMINI_API_KEY` and optional `GEMINI_MODEL`. Never expose the service-role, Gemini, or Stripe secret keys as `NEXT_PUBLIC_*` values.
 
 All user-owned APIs require a valid Supabase access token, database tables use row-level security, Stripe webhooks are signature-verified, and generation limits are enforced server-side.
