@@ -19,7 +19,13 @@ export default function Home(){
  const token=session?.access_token;
  const filtered=items.filter(i=>`${i.title} ${i.contentType}`.toLowerCase().includes(search.toLowerCase()));
  const notify=(m:string)=>{setToast(m);setTimeout(()=>setToast(""),2500)};
- const api=(path:string,init:RequestInit={})=>fetch(path,{...init,headers:{...(init.body?{"Content-Type":"application/json"}:{}),...(token?{Authorization:`Bearer ${token}`}:{})}});
+ const api=async(path:string,init:RequestInit={})=>{
+  const request=async(accessToken?:string)=>fetch(path,{...init,headers:{...(init.body?{"Content-Type":"application/json"}:{}),...(accessToken?{Authorization:`Bearer ${accessToken}`}:{})}});
+  const{data}=await supabase.auth.getSession();
+  let response=await request(data.session?.access_token);
+  if(response.status===401){const{data:refreshed}=await supabase.auth.refreshSession();if(refreshed.session)response=await request(refreshed.session.access_token)}
+  return response
+ };
 
  useEffect(()=>{supabase.auth.getSession().then(({data})=>{setSession(data.session);setAuthReady(true)});const{data}=supabase.auth.onAuthStateChange((_e,s)=>setSession(s));return()=>data.subscription.unsubscribe()},[supabase]);
  useEffect(()=>{if(!token)return;Promise.all([api("/api/generations"),api("/api/brand")]).then(async([g,b])=>{if(g.ok)setItems(await g.json());if(b.ok){const p=await b.json();if(p)setBrand({name:p.name||"",website:p.website||"",description:p.description||"",audience:p.audience||"",personality:p.personality||"",avoidWords:p.avoid_words||""})}})},[token]);
